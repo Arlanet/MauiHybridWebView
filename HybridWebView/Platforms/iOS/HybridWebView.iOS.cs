@@ -3,7 +3,7 @@ using WebKit;
 
 namespace HybridWebView
 {
-    partial class HybridWebView
+    public partial class HybridWebView
     {
         internal const string AppHostAddress = "0.0.0.0";
 

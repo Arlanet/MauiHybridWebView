@@ -34,9 +34,12 @@ namespace HybridWebView
 
             PlatformWebView.CoreWebView2.Settings.AreDevToolsEnabled = EnableWebDevTools;
             PlatformWebView.CoreWebView2.Settings.IsWebMessageEnabled = true;
-            PlatformWebView.CoreWebView2.AddWebResourceRequestedFilter($"{AppOrigin}*", CoreWebView2WebResourceContext.All);
-            PlatformWebView.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
 
+            if (UseEmbeddedApp)
+            {
+                PlatformWebView.CoreWebView2.AddWebResourceRequestedFilter($"{AppOrigin}*", CoreWebView2WebResourceContext.All);
+                PlatformWebView.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
+            }
         }
 
         private partial void NavigateCore(string url)

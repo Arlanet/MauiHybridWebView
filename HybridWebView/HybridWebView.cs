@@ -5,6 +5,11 @@ namespace HybridWebView
     public partial class HybridWebView : WebView
     {
         /// <summary>
+        /// Specifies if the WebView should be served from <see cref="HybridAssetRoot"/> or act as a normal WebView.
+        /// </summary>
+        public bool UseEmbeddedApp { get; set; } = true;
+
+        /// <summary>
         /// Specifies the file within the <see cref="HybridAssetRoot"/> that should be served as the main file. The
         /// default value is <c>index.html</c>.
         /// </summary>
@@ -36,6 +41,11 @@ namespace HybridWebView
 
         public void Navigate(string url)
         {
+            if (!UseEmbeddedApp)
+            {
+                return;
+            }
+
             NavigateCore(url);
         }
 
@@ -51,7 +61,6 @@ namespace HybridWebView
         private partial Task InitializeHybridWebView();
 
         private partial void NavigateCore(string url);
-
 
 #if !ANDROID && !IOS && !MACCATALYST && !WINDOWS
         private partial Task InitializeHybridWebView() => throw null!;
@@ -104,13 +113,13 @@ namespace HybridWebView
                     {
                         throw new InvalidOperationException($"Expected invoke message to contain MessageContent, but it was null.");
                     }
+
                     var invokeData = JsonSerializer.Deserialize<JSInvokeMethodData>(messageData.MessageContent)!;
                     InvokeDotNetMethod(invokeData);
                     break;
                 default:
                     throw new InvalidOperationException($"Unknown message type: {messageData?.MessageType}. Message contents: {messageData?.MessageContent}");
             }
-
         }
 
         private void InvokeDotNetMethod(JSInvokeMethodData invokeData)
@@ -153,14 +162,15 @@ namespace HybridWebView
 
         internal static async Task<string?> GetAssetContentAsync(string assetPath)
         {
-            using var stream = await GetAssetStreamAsync(assetPath);
+            await using var stream = await GetAssetStreamAsync(assetPath);
             if (stream == null)
             {
                 return null;
             }
+
             using var reader = new StreamReader(stream);
 
-            var contents = reader.ReadToEnd();
+            var contents = await reader.ReadToEndAsync();
 
             return contents;
         }
@@ -171,6 +181,7 @@ namespace HybridWebView
             {
                 return null;
             }
+
             return await FileSystem.OpenAppPackageFileAsync(assetPath);
         }
     }

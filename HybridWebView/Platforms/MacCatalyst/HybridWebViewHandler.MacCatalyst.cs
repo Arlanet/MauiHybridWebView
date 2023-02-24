@@ -7,13 +7,17 @@ using WebKit;
 
 namespace HybridWebView
 {
-    partial class HybridWebViewHandler
+    public partial class HybridWebViewHandler
     {
         protected override WKWebView CreatePlatformView()
         {
             var config = new WKWebViewConfiguration();
             config.UserContentController.AddScriptMessageHandler(new WebViewScriptMessageHandler(MessageReceived), "webwindowinterop");
-            config.SetUrlSchemeHandler(new SchemeHandler(this), urlScheme: "app");
+
+            if (((HybridWebView)VirtualView).UseEmbeddedApp)
+            {
+                config.SetUrlSchemeHandler(new SchemeHandler(this), urlScheme: "app");
+            }
 
             // Legacy Developer Extras setting.
             var enableWebDevTools = ((HybridWebView)VirtualView).EnableWebDevTools;
@@ -38,7 +42,7 @@ namespace HybridWebView
 
         private sealed class WebViewScriptMessageHandler : NSObject, IWKScriptMessageHandler
         {
-            private Action<Uri, string> _messageReceivedAction;
+            private readonly Action<Uri, string> _messageReceivedAction;
 
             public WebViewScriptMessageHandler(Action<Uri, string> messageReceivedAction)
             {
@@ -51,6 +55,7 @@ namespace HybridWebView
                 {
                     throw new ArgumentNullException(nameof(message));
                 }
+
                 _messageReceivedAction(HybridWebView.AppOriginUri, ((NSString)message.Body).ToString());
             }
         }
@@ -73,7 +78,7 @@ namespace HybridWebView
                 {
                     using (var dic = new NSMutableDictionary<NSString, NSString>())
                     {
-                        dic.Add((NSString)"Content-Length", (NSString)(responseBytes.Length.ToString(CultureInfo.InvariantCulture)));
+                        dic.Add((NSString)"Content-Length", (NSString)responseBytes.Length.ToString(CultureInfo.InvariantCulture));
                         dic.Add((NSString)"Content-Type", (NSString)contentType);
                         // Disable local caching. This will prevent user scripts from executing correctly.
                         dic.Add((NSString)"Cache-Control", (NSString)"no-cache, max-age=0, must-revalidate, no-store");
@@ -82,8 +87,8 @@ namespace HybridWebView
                             using var response = new NSHttpUrlResponse(urlSchemeTask.Request.Url, statusCode, "HTTP/1.1", dic);
                             urlSchemeTask.DidReceiveResponse(response);
                         }
-
                     }
+
                     urlSchemeTask.DidReceiveData(NSData.FromArray(responseBytes));
                     urlSchemeTask.DidFinish();
                 }

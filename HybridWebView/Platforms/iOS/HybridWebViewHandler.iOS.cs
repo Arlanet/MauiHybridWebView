@@ -13,7 +13,11 @@ namespace HybridWebView
         {
             var config = new WKWebViewConfiguration();
             config.UserContentController.AddScriptMessageHandler(new WebViewScriptMessageHandler(MessageReceived), "webwindowinterop");
-            config.SetUrlSchemeHandler(new SchemeHandler(this), urlScheme: "app");
+
+            if (((HybridWebView)VirtualView).UseEmbeddedApp)
+            {
+                config.SetUrlSchemeHandler(new SchemeHandler(this), urlScheme: "app");
+            }
 
             // Legacy Developer Extras setting.
             var enableWebDevTools = ((HybridWebView)VirtualView).EnableWebDevTools;

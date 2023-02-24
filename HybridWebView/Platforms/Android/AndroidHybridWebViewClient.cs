@@ -13,6 +13,7 @@ namespace HybridWebView
         {
             _handler = handler;
         }
+
         public override WebResourceResponse? ShouldInterceptRequest(AWebView? view, IWebResourceRequest? request)
         {
             var requestUri = request?.Url?.ToString();

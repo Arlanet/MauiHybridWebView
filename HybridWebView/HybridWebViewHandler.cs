@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.Handlers;
+using Microsoft.Maui.Platform;
 
 namespace HybridWebView
 {
@@ -25,7 +26,10 @@ namespace HybridWebView
         {
             if (handler is HybridWebViewHandler platformHandler)
             {
-                var webViewClient = new AndroidHybridWebViewClient(platformHandler);
+                var webViewClient = ((HybridWebView)webView).UseEmbeddedApp
+                    ? new AndroidHybridWebViewClient(platformHandler)
+                    : new MauiWebViewClient(platformHandler);
+
                 handler.PlatformView.SetWebViewClient(webViewClient);
 
                 // TODO: There doesn't seem to be a way to override MapWebViewClient() in maui/src/Core/src/Handlers/WebView/WebViewHandler.Android.cs
